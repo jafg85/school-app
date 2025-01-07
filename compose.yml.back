@@ -1,0 +1,45 @@
+version: '3.8'  # Versión de Docker Compose
+
+services:
+  # Servicio para la base de datos MySQL
+  mysql:
+    image: mysql:8.0  # Imagen oficial de MySQL
+    container_name: school_app_mysql  # Nombre del contenedor
+    environment:
+      MYSQL_ROOT_PASSWORD: admin  # Contraseña del usuario root
+      MYSQL_DATABASE: jdbc:mysql://localhost:3306/school_db?useSSL=false&serverTimezone=UTC  # Nombre de la base de datos
+      MYSQL_USER: root  # Usuario de la base de datos
+      MYSQL_PASSWORD: admin  # Contraseña del usuario
+    ports:
+      - "3306:3306"  # Expone el puerto 3306 de MySQL
+    volumes:
+      - mysql_data:/var/lib/mysql  # Volumen para persistir los datos
+    networks:
+      - mi_app_network  # Red para conectar los servicios
+
+  # Servicio para la aplicación Spring Boot
+  app:
+    image: mi_app_spring_boot  # Nombre de la imagen de tu aplicación
+    container_name: school_app_spring_boot  # Nombre del contenedor
+    build:
+      context: .  # Ruta al directorio que contiene el Dockerfile
+      dockerfile: Dockerfile  # Nombre del Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/school_db?useSSL=false&serverTimezone=UTC  # URL de la base de datos
+      SPRING_DATASOURCE_USERNAME: root  # Usuario de la base de datos
+      SPRING_DATASOURCE_PASSWORD: admin  # Contraseña del usuario
+      SPRING_JPA_HIBERNATE_DDL-AUTO: update  # Configuración de Hibernate
+    ports:
+      - "8080:8080"  # Expone el puerto 8080 de la aplicación
+    depends_on:
+      - mysql  # Dependencia: la aplicación espera a que MySQL esté listo
+    networks:
+      - mi_app_network  # Red para conectar los servicios
+
+# Volúmenes para persistir datos
+volumes:
+  mysql_data:  # Volumen para MySQL
+
+# Redes para conectar los servicios
+networks:
+  mi_app_network:  # Red personalizada
